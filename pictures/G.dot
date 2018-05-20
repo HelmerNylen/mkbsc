@@ -1,0 +1,22 @@
+digraph  {
+splines=True;
+ranksep=0.5;
+concentrate=False;
+nodesep=0.5;
+140536682865944 [label=0];
+hidden [shape=none, label=""];
+140536285295336 [label=2];
+140536656684816 [label=1];
+140536682865944 -> 140536682865944  [action="(('w', 'w'), ('p', 'p'))", label="(w, w), (p, p)", key="(('w', 'w'), ('p', 'p'))", dir=back];
+140536682865944 -> 140536285295336  [label="(p, w)", action="('p', 'w')", key="('p', 'w')"];
+140536682865944 -> 140536285295336  [label="~1", key=1, colorscheme=set19, arrowhead=none, color=2, constraint=True, style=dashed];
+140536682865944 -> 140536656684816  [label="(w, p)", action="('w', 'p')", key="('w', 'p')"];
+140536682865944 -> 140536656684816  [label="~0", key=1, colorscheme=set19, arrowhead=none, color=1, constraint=True, style=dashed];
+hidden -> 140536682865944  [key=0];
+140536285295336 -> 140536682865944  [label="(w, p)", action="('w', 'p')", key="('w', 'p')"];
+140536285295336 -> 140536285295336  [action="(('w', 'w'), ('p', 'p'))", label="(w, w), (p, p)", key="(('w', 'w'), ('p', 'p'))", dir=back];
+140536285295336 -> 140536656684816  [label="(p, w)", action="('p', 'w')", key="('p', 'w')"];
+140536656684816 -> 140536656684816  [action="(('w', 'w'), ('p', 'p'))", label="(w, w), (p, p)", key="(('w', 'w'), ('p', 'p'))", dir=back];
+140536656684816 -> 140536285295336  [label="(w, p)", action="('w', 'p')", key="('w', 'p')"];
+140536656684816 -> 140536682865944  [label="(p, w)", action="('p', 'w')", key="('p', 'w')"];
+}

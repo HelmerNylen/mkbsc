@@ -1,0 +1,59 @@
+Alphabet:
+'K','C','S'
+'K','C','S'
+
+Base States:
+0='Start'
+1='Mismatch'
+2='Match'
+3='Perfect'
+4='Miss'
+5='Okay'
+
+Knowledge States:
+
+Initial State: 0
+
+Observations:
+2,1|0|3|4|5
+0|1|2|3|4|5
+
+Transitions:
+0 0,3 1
+0 1,3 1
+0 2,3 1
+0 0,4 1
+0 1,4 1
+0 2,4 1
+0 0,5 1
+0 1,5 1
+0 2,5 1
+0 0,3 2
+0 1,3 2
+0 2,3 2
+0 0,4 2
+0 1,4 2
+0 2,4 2
+0 0,5 2
+0 1,5 2
+0 2,5 2
+1 0,3 1
+1 1,4 1
+1 1,3 2
+1 0,4 2
+1 2,3 4
+1 0,5 4
+1 2,5 4
+1 2,4 5
+1 1,5 5
+2 0,3 2
+2 1,4 2
+2 1,3 1
+2 0,4 1
+2 2,3 5
+2 0,5 5
+2 2,4 4
+2 1,5 4
+2 2,5 3
+
+Attributes: {"splines": "True", "concentrate": false, "nodesep": 0.5, "ranksep": 0.5, "rankdir": "LR"}

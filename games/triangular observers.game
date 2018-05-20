@@ -1,0 +1,31 @@
+Alphabet:
+'a'
+'a'
+
+Base States:
+0=0
+1=1
+2=2
+
+Knowledge States:
+
+Initial State: 0
+
+Observations:
+0,1|2
+0,2|1
+
+Transitions:
+0 0,1 0
+0 0,1 0
+0 0,1 1
+1 0,1 1
+1 0,1 1
+1 0,1 2
+1 0,1 0
+2 0,1 2
+2 0,1 2
+2 0,1 0
+2 0,1 1
+
+Attributes: {"nodesep": 0.5, "concentrate": false, "splines": "True", "ranksep": 0.5}

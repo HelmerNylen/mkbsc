@@ -1,0 +1,32 @@
+Alphabet:
+'w','p'
+'w','p'
+
+Base States:
+0=0
+1=1
+2=2
+
+Knowledge States:
+
+Initial State: 0
+
+Observations:
+0,1|2
+0,2|1
+
+Transitions:
+0 0,2 0
+0 1,3 0
+0 0,3 1
+0 1,2 2
+1 0,2 1
+1 1,3 1
+1 0,3 2
+1 1,2 0
+2 0,2 2
+2 1,3 2
+2 0,3 0
+2 1,2 1
+
+Attributes: {"splines": "True", "ranksep": 0.5, "concentrate": false, "nodesep": 0.5}
