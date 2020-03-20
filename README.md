@@ -11,6 +11,8 @@ This library uses the following external programs, which need to be installed fo
 - [pydot](https://github.com/erocarrera/pydot), which can be installed via `pip3 install pydot`
 - [Graphviz](https://www.graphviz.org/), which can be downloaded from their website
 
+Note: the library was written for Python 3.5, NetworkX 2.1 and pydot 1.2.4. To increase the chance that everything works as intended you may wish to use those versions.
+
 ## The `mkbsc` package
 ### Usage example - Wagon problem
 ![Game graph of the wagon proplem](pictures/G.png)
