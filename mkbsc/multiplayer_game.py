@@ -321,75 +321,44 @@ class MultiplayerGame:
         
         tested = set()
         queue = deque([(initial_states, consistent(initial_states))])
-        
-        """
-        debugThread = None
-        done = False
-        counter = 0
-        if debug:
-            def checker():
-                i = 0
-                while not done:
-                    i += 1
-                    if i == 10:
-                        print(str(counter) + " / " + str(len(queue)) + " / " + str(len(states)))
-                        i = 0
-                    time.sleep(0.5)
-                    
-            
-            debugThread = threading.Thread(target=checker, daemon=True)
-            debugThread.start()
-        """
             
         while len(queue):
-            #counter += 1
-            #print("Loop!")
             state_tuple, possible = queue.pop()
-            #print(state_tuple)
             
             if state_tuple in tested:
-                #print("Tested, skipping")
                 continue
             else:
                 tested.add(state_tuple)
             
-            #print("Possible: " + str(possible))
             for joint_action in self.alphabet.permute():
-                #print("Action: " + str(joint_action))
-                
                 possible_post = self.post(joint_action, possible)
-                #print("Possible (post): " + str(possible_post))
-                
                 players_post = [games[i].post(joint_action[i], state_tuple[i]) for i in range(self.player_count)]
-                #print("Players' post (unfiltered): " + str(players_post))
                 
                 for i in range(self.player_count):
                     players_post[i] = set(filter(lambda state: not state.knowledges[0].isdisjoint(possible_post), players_post[i]))
-                #print("Players' post (filtered):   " + str(players_post))
                 
                 for possible_knowledge in _permute(players_post):
-                    #print("Possible knowledge: " + str(possible_knowledge))
                     knowledge_tuple = tuple(state.knowledges[0] for state in possible_knowledge)
+                    consistent_to = consistent(possible_knowledge)
+                    if not consistent_to:
+                        continue
                     if knowledge_tuple not in states:
-                        #print("It's new")
-                        cons = consistent(possible_knowledge)
-                        #print("Consistent: " + str(cons))
-                        
-                        if len(cons):
-                            #print("Adding to res and queue")
-                            states[knowledge_tuple] = State(*knowledge_tuple)
-                            queue.appendleft((possible_knowledge, cons))
-                        else:
-                            continue
+                        states[knowledge_tuple] = State(*knowledge_tuple)
+                        queue.appendleft((possible_knowledge, consistent_to))
                     
-                    #print("Adding transition")
+                    consistent_from = consistent(state_tuple)
+                    for t in self.transitions:
+                        if t.joint_action == joint_action and t.start in consistent_from and t.end in consistent_to:
+                            break
+                    else:
+                        # Prune inconsistent transitions.
+                        continue
+                    
                     k = tuple(state.knowledges[0] for state in state_tuple)
                     fromstate = states[k]
                     tostate = states[knowledge_tuple]
-                    
-                    transitions.append(Transition(fromstate, joint_action, tostate))
-        
-        #done = True
+                    transition = Transition(fromstate, joint_action, tostate)
+                    transitions.append(transition)
         
         initial_state = states[initial_knowledges]
         states = list(states.values())
@@ -405,7 +374,6 @@ class MultiplayerGame:
             
         partitionings = tuple(Partitioning(*[Observation(*observation_dicts[i][knowledge]) for knowledge in observation_dicts[i]]) for i in range(self.player_count))
         
-        #print("Sync game creation")
         return MultiplayerGame(states, initial_state, self.alphabet, transitions, partitionings, **attributes)
         
         
