@@ -30,7 +30,8 @@ def _lookup(states, knowledge, single_knowledge=True):
         if state.knowledges == knowledge:
             return state
         
-    raise KeyError("Could not find a matching state")
+    raise KeyError("Could not find a matching state. Searching for "
+                   f"{knowledge!r} in {states!r}")
     
 def _lookup_by_base(states, base):
     """Find the state with the specified consistent base (see state.py)"""
