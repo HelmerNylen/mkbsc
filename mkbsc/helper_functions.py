@@ -1,5 +1,8 @@
-from itertools      import combinations, chain
-from collections    import deque
+from itertools import combinations, chain
+from collections import deque
+from typing import Iterable, Set
+
+from mkbsc import state
 
 
 def _permute(iterables):
@@ -33,7 +36,9 @@ def _lookup(states, knowledge, single_knowledge=True):
     raise KeyError("Could not find a matching state. Searching for "
                    f"{knowledge!r} in {states!r}")
     
-def _lookup_by_base(states, base):
+def _lookup_by_base(
+        states: Iterable[state.State],
+        base: Set[state.State]) -> Set[state.State]:
     """Find the state with the specified consistent base (see state.py)"""
     
     res = set()

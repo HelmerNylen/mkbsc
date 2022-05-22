@@ -1,13 +1,23 @@
-from .state             import State
-from .multiplayer_game  import MultiplayerGame
-
-from queue      import LifoQueue
-from json       import dumps, loads
-from subprocess import call
-
+from json import dumps, loads
 import os
+from queue import LifoQueue
+from subprocess import call
+from typing import Any, Dict, Iterable, List, Literal, Union
 
-def export(game, filename, view=True, folder="pictures", epistemic="nice", supress_edges=False, group_observations=None, target_states=None, **kwargs):
+from mkbsc.state import State
+from mkbsc.multiplayer_game import MultiplayerGame
+
+
+def export(
+        game: MultiplayerGame,
+        filename: str,
+        view: bool = True,
+        folder: str = "pictures",
+        epistemic: Union[str, Literal[False]] = "nice",
+        supress_edges: bool = False,
+        group_observations = None,
+        target_states=None,
+        **kwargs):
     """Exports the game as a picture
     
     view -- if true, opens the file when done
@@ -17,7 +27,7 @@ def export(game, filename, view=True, folder="pictures", epistemic="nice", supre
     group_observations -- if true, the observations will be arranged in marked subgraphs. Only works for singleplayer games
     target_states -- the states (or singleton knowledge in states) which should be marked in the rendered graph"""
     
-    with open(folder + "/" + filename + ".dot", "w") as dotfile:
+    with open(os.path.join(folder, filename + ".dot"), "w") as dotfile:
         dotfile.write(game.to_dot(epistemic=epistemic, supress_edges=supress_edges, group_observations=group_observations, target_states=target_states, **kwargs))
 
     call(["dot", "-Tpng", folder + "/" + filename + ".dot", "-o", folder + "/" + filename + ".png"])
@@ -25,7 +35,12 @@ def export(game, filename, view=True, folder="pictures", epistemic="nice", supre
         call(("start " if os.name == "nt" else "xdg-open ") + folder + "/" + filename + ".png", shell=True)
 
 
-def from_file(filename, folder="games", fileext=".game", validate=True):
+def from_file(
+        filename: str,
+        folder: str = "games",
+        fileext: str = ".game",
+        validate: bool = True,
+    ) -> MultiplayerGame:
     """Import a game from a file
 
     validate -- if false, skips the computationally expensive validation when creating the game"""
@@ -39,7 +54,7 @@ def from_file(filename, folder="games", fileext=".game", validate=True):
         except StopIteration as e:
             raise EOFError from e
 
-def from_string(string, validate=True):
+def from_string(string: str, validate: bool = True) -> MultiplayerGame:
     """Import a game from a string
 
     validate -- if false, skips the computationally expensive validation when creating the game"""
@@ -48,7 +63,7 @@ def from_string(string, validate=True):
     except StopIteration as e:
         raise ValueError from e
 
-def to_file(game, filename, folder="games", fileext=".game"):
+def to_file(game: MultiplayerGame, filename: str, folder: str = "games", fileext: str = ".game"):
     """Export a game to a file"""
     if folder and len(folder) != 0:
         folder += "/"
@@ -58,16 +73,18 @@ def to_file(game, filename, folder="games", fileext=".game"):
         for line in _serialize(game):
             f.write(line + "\n")
 
-def to_string(game):
+def to_string(game: MultiplayerGame) -> str:
     """Export a game to a string"""
     return "\n".join(_serialize(game))
 
-def _serialize(game):
+def _serialize(game: MultiplayerGame) -> Iterable[str]:
     #Alphabet
     yield "Alphabet:"
     
     action_id = 0
-    alphabet_dicts = [{} for player in range(game.player_count)]
+    alphabet_dicts: List[Dict[Any, int]] = [
+        {} for player in range(game.player_count)
+    ]
     for i, playeralphabet in enumerate(game.alphabet):
         for action in playeralphabet:
             alphabet_dicts[i][action] = action_id
@@ -86,7 +103,7 @@ def _serialize(game):
     state_id = 0
     state_dict = {}
     states = game.states
-    state_stack = LifoQueue()
+    state_stack: LifoQueue[State] = LifoQueue()
 
     while type(_pick(states)[0]) is frozenset:
         newstates = set()
@@ -141,7 +158,7 @@ def _serialize(game):
 
     yield "Attributes: " + dumps(game.graph.graph["graph"])
 
-def _parse(iterable, validate=True):
+def _parse(iterable: Iterable[str], validate: bool = True) -> MultiplayerGame:
     iterator = iter(iterable)
 
     iterator.__next__()
@@ -159,7 +176,7 @@ def _parse(iterable, validate=True):
         while i < len(line):
             if line[i] in "\'\"":
                 nextquote = line.index(line[i], i + 1)
-                value = line[i + 1:nextquote]
+                value: Union[int, str] = line[i + 1:nextquote]
                 i = nextquote + 2
 
                 currentalphabet.append(value)
@@ -217,9 +234,9 @@ def _parse(iterable, validate=True):
     line = iterator.__next__()
     while line != "" and not line.isspace():
         id = int(line[:line.index("=")])
-        knowledge = line[line.index("=") + 1:]
+        linepart = line[line.index("=") + 1:]
 
-        knowledge = [frozenset(state_dict[int(i)] for i in playerknowledge.split(",")) for playerknowledge in knowledge.split("|")]
+        knowledge = [frozenset(state_dict[int(i)] for i in playerknowledge.split(",")) for playerknowledge in linepart.split("|")]
         
         state = State(*knowledge)
         state_dict[id] = state
@@ -254,10 +271,12 @@ def _parse(iterable, validate=True):
 
     line = iterator.__next__()
     while line != "" and not line.isspace():
-        transition = line.split(" ")
-        transition[0] = state_dict[int(transition[0])]
-        transition[2] = state_dict[int(transition[2])]
-        transition[1] = [alphabet_dict[int(action)] for action in transition[1].split(",")]
+        state_from, joint_action, state_to = line.split(" ")
+        transition = [
+            state_dict[int(state_from)],
+            [alphabet_dict[int(action)] for action in joint_action.split(",")],
+            state_dict[int(state_to)],
+        ]
         transitions.append(transition)
 
         line = iterator.__next__()

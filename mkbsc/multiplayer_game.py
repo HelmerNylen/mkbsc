@@ -7,12 +7,13 @@ from .helper_functions  import _permute, _lookup, _lookup_by_base, _reachable, c
 
 #import threading
 #import time
-from itertools          import chain, combinations, permutations
-from collections        import deque
+from itertools import chain, combinations, permutations
+from collections import deque
+from typing import Callable, Dict, Literal, Optional, Sequence, Set, Union
 
-import networkx as nx
-from networkx.algorithms.isomorphism    import is_isomorphic
-from networkx.drawing.nx_pydot          import to_pydot
+import networkx as nx  # type: ignore
+from networkx.algorithms.isomorphism import is_isomorphic  # type: ignore
+from networkx.drawing.nx_pydot import to_pydot  # type: ignore
 
 
 class MultiplayerGame:
@@ -68,8 +69,9 @@ class MultiplayerGame:
             to_remove = (set(self.states) - _reachable(self.graph, self.initial_state)) - {self.initial_state}
             #print("Removing " + str(to_remove))
             self.graph.remove_nodes_from(to_remove)
-            
-    def create(content, initial, alphabet, transition_edges, state_groupings, **attributes):
+    
+    @classmethod
+    def create(cls, content, initial, alphabet, transition_edges, state_groupings, **attributes):
         """Create a new game and validate it
 
         content -- the knowledge of the states, ex. [1, 2, 3] or range(5)
@@ -127,9 +129,10 @@ class MultiplayerGame:
         partitionings = tuple(partitionings)
         
         
-        return MultiplayerGame(states, initial_state, alphabet, transitions, partitionings, False, True, **attributes)
+        return cls(states, initial_state, alphabet, transitions, partitionings, False, True, **attributes)
     
-    def _create_from_serialized(states, initial_state, alphabet, transitions, state_groupings, validate=True, **attributes):
+    @classmethod
+    def _create_from_serialized(cls, states, initial_state, alphabet, transitions, state_groupings, validate=True, **attributes):
         """Create a new game from serialized data and validate it"""
         
         states = tuple(states)
@@ -141,8 +144,7 @@ class MultiplayerGame:
         
         partitionings = tuple(map(lambda grouping: Partitioning(*[Observation(*group) for group in grouping]), state_groupings))
         
-        
-        return MultiplayerGame(states, initial_state, alphabet, transitions, partitionings, False, validate, **attributes)
+        return cls(states, initial_state, alphabet, transitions, partitionings, False, validate, **attributes)
         
     def state(self, knowledge):
         """Get the state object with the specified knowledge"""
@@ -152,7 +154,7 @@ class MultiplayerGame:
         """Get the state objects which represent the specified base states"""
         return _lookup_by_base(self.states, base)
     
-    def post(self, action, states):
+    def post(self, action, states) -> Set[State]:
         """Get the states that are possible after taking a certain action in one of the specified states"""
         
         res = set()
@@ -172,7 +174,7 @@ class MultiplayerGame:
         
         return res
 
-    def reachable(self, initial=None):
+    def reachable(self, initial: Optional[State] = None) -> Set[State]:
         """Get the reachable states in a game, optionally given a certain initial state"""
         
         res = set()
@@ -181,9 +183,18 @@ class MultiplayerGame:
             res.add(self.initial_state)
         return res.union(_reachable(self.graph, initial))
         
-    def to_dot(self, group_observations=None, group_by_base=False, group_edges=True, epistemic=False, \
-               supress_edges=False, color_scheme="set19", colorfunc=lambda x:x+1, observations_constrain=True, \
-               target_states=None, **kwargs):
+    def to_dot(
+            self,
+            group_observations: Optional[bool] = None,
+            group_by_base: bool = False,
+            group_edges: bool = True,
+            epistemic: Union[str, Literal[False]] = False,
+            supress_edges: bool = False,
+            color_scheme: str = "set19",
+            colorfunc: Callable[[int], int] = lambda x: x+1,
+            observations_constrain: bool = True,
+            target_states: Optional[Sequence[Union[State, Set[State]]]] = None,
+            **kwargs) -> str:
         """Generate a dot representation of the game
 
         group_observations -- if true, places the nodes in an observation within a subgraph cluster. Only works well for some singleplayer games.
@@ -235,7 +246,11 @@ class MultiplayerGame:
                 G[edge[0]][edge[1]][edge[2]]["label"] = ""
                 
         
-        epistemic_functions = {"verbose": State.epistemic_verbose, "nice": State.epistemic_nice, "isocheck": State.epistemic_isocheck}
+        epistemic_functions: Dict[str, Callable[[State], str]] = {
+            "verbose": State.epistemic_verbose,
+            "nice": State.epistemic_nice,
+            "isocheck": State.epistemic_isocheck,
+        }
         if epistemic:
             func = epistemic_functions[epistemic.lower()]
             for state in G.nodes():
@@ -245,10 +260,9 @@ class MultiplayerGame:
         G.add_edge("hidden", self.initial_state)
 
         if target_states:
-            for i in range(len(target_states)):
-                if type(target_states[i]) is not State:
-                    target_states[i:i+1] = _lookup_by_base(self.states, target_states[i])
             for target_state in target_states:
+                if not isinstance(target_state, State):
+                    [target_state] = _lookup_by_base(self.states, target_state)
                 G.nodes[target_state]["shape"] = "doublecircle"
         
         #if group_observations is None:
@@ -293,7 +307,7 @@ class MultiplayerGame:
             State.compact_representation = False
             return "\n".join(arr)
     
-    def project(self, player):
+    def project(self, player: int) -> 'MultiplayerGame':
         """Project the game onto a player"""
         
         assert player < self.player_count
@@ -310,7 +324,7 @@ class MultiplayerGame:
         return MultiplayerGame(states, initial_state, alphabet, transitions, partitionings, **attributes)
         
     
-    def _synchronous_product(self, games):
+    def _synchronous_product(self, games: Sequence['MultiplayerGame']) -> 'MultiplayerGame':
         """Combine singleplayer knowledge-based games into a single knowledge-based multiplayer game"""
         
         initial_states = tuple(game.initial_state for game in games)
@@ -378,7 +392,7 @@ class MultiplayerGame:
         
         
         
-    def KBSC(self):
+    def KBSC(self) -> 'MultiplayerGame':
         """Apply the KBSC to the game (or MKBSC in the multiplayer case)"""
         
         if self.player_count > 1:
@@ -427,7 +441,7 @@ class MultiplayerGame:
             #print("KBSC game creation")
             return MultiplayerGame(states, initial_state, self.alphabet, transitions, partitionings, remove_unreachable=True, **attributes)
     
-    def isomorphic(self, other, consider_observations=False):
+    def isomorphic(self, other: 'MultiplayerGame', consider_observations: bool = False):
         """Check if two games have isomorphic graphs with regards to nodes and edges
         
         other -- the other game
@@ -462,6 +476,6 @@ class MultiplayerGame:
         
         s = ""
         for player, partitioning in enumerate(self.partitionings):
-            s += "Spelare " + str(player) + ": " + ", ".join([str(tuple(sorted([s.epistemic_isocheck() for s in o]))) for o in sorted(partitioning.observations, key=lambda o: len(o)) if len(o) > 1])
+            s += "Player " + str(player) + ": " + ", ".join([str(tuple(sorted([s.epistemic_isocheck() for s in o]))) for o in sorted(partitioning.observations, key=lambda o: len(o)) if len(o) > 1])
             s += "\n"
         return s
