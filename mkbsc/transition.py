@@ -27,6 +27,7 @@ class Transition:
 	def label(self) -> str:
 		"""Return the string representation of the joint action"""
 		if len(self.joint_action) > 1:
-			return "(" + ", ".join(str(action) for action in self.joint_action) + ")"
+			return "(" + ", ".join(
+			    str(action) for action in self.joint_action) + ")"
 		else:
 			return str(self.joint_action[0])

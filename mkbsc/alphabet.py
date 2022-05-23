@@ -21,7 +21,7 @@ class Alphabet(Generic[T]):
 				s.add(action)
 
 		self.actions = tuple(
-		  tuple(a for a in playeractions) for playeractions in actions)
+		    tuple(a for a in playeractions) for playeractions in actions)
 
 	def __getitem__(self, index: int) -> Tuple[T, ...]:
 		"""Get the alphabet (a tuple of the possible actions) for the specified player"""
