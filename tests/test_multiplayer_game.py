@@ -7,19 +7,17 @@ from tests import data
 class TestMultiplayerGame(unittest.TestCase):
 
 	def assertGameEquivalent(
-			self,
-			first: multiplayer_game.MultiplayerGame,
-			second: multiplayer_game.MultiplayerGame,
-			msg: str = "The games are not equivalent",
-		) -> None:
-		self.assertTrue(
-			first.isomorphic(second, consider_observations=True),
-			"The games are not isomorphic: " + msg
-		)
+	    self,
+	    first: multiplayer_game.MultiplayerGame,
+	    second: multiplayer_game.MultiplayerGame,
+	    msg: str = "The games are not equivalent",
+	) -> None:
+		self.assertTrue(first.isomorphic(second, consider_observations=True),
+		                "The games are not isomorphic: " + msg)
 		self.assertEqual(
-			first.alphabet.actions,
-			second.alphabet.actions,
-			"The games have different action alphabets: " + msg,
+		    first.alphabet.actions,
+		    second.alphabet.actions,
+		    "The games have different action alphabets: " + msg,
 		)
 		# TODO: check state content
 

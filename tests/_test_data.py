@@ -2,6 +2,7 @@ import unittest
 
 from tests import data
 
+
 class TestData(unittest.TestCase):
 
 	def test_can_create_wagon_game(self):
