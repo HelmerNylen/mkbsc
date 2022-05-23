@@ -1,0 +1,5 @@
+[style]
+based_on_style = google
+use_tabs = True
+indent_width = 1
+continuation_indent_width = 2
