@@ -1,9 +1,9 @@
-from typing import Set, TypeVar
+from typing import Any, FrozenSet, Generic, Set, Tuple, TypeVar
 
-T = TypeVar("T")
+T = TypeVar("T", Any, FrozenSet)
 
 
-class State:
+class State(Generic[T]):
 	"""Represents a game state, with separate knowledge for each player
 
 	The knowledge is stored as a tuple, and can be accessed by State().knowledges[playerindex]
@@ -21,17 +21,37 @@ class State:
 		ex. s = State(1)
 		"""
 
-		self.knowledges = tuple(knowledges)
+		self.knowledges: Tuple[T, ...] = tuple(knowledges)
 
 	def __getitem__(self, index: int) -> T:
 		"""Get the knowledge of the specified player
 
 		Will work as expected even if knowledges is a singleton"""
 
-		if len(self.knowledges) == 1:
+		if self.is_singleplayer:
 			return self.knowledges[0]
 		else:
 			return self.knowledges[index]
+
+	# TODO: Use a separate SingleplayerState class.
+	@property
+	def is_singleplayer(self) -> bool:
+		"""Whether there is only one element in the knowledge tuple.
+
+		The knowledge tuple of states in a singleplayer game have only
+		one element. This may also be the case for base states.
+		"""
+		return len(self.knowledges) == 1
+
+	# TODO: this could probably be done in a less hacky way
+	@property
+	def is_base_state(self) -> bool:
+		"""Whether this is a state belonging to the original game.
+		
+		The elements of knowledge tuples in states that have had the KBSC
+		applied are frozen sets.
+		"""
+		return not isinstance(self.knowledges[0], frozenset)
 
 	def __str__(self) -> str:
 		return repr(self)
@@ -47,11 +67,11 @@ class State:
 
 
 #        return "s" + str(self.knowledges)
-		if len(self.knowledges) == 1:
-			if type(self.knowledges[0]) is frozenset:
-				return str(set(self.knowledges[0]))
-			else:
+		if self.is_singleplayer:
+			if self.is_base_state:
 				return str(self.knowledges[0])
+			else:
+				return str(set(self.knowledges[0]))
 		else:
 			return str(
 			    tuple(
@@ -62,7 +82,7 @@ class State:
 
 	def epistemic_verbose(self, level: int = 0) -> str:
 		"""Return a verbose representation of the knowledge. Not recommended for overly iterated games."""
-		if len(self.knowledges) == 1:
+		if self.is_singleplayer:
 			return State.__indent * level + "We are in " + str(
 			    self.knowledges[0]) + "\n"
 
@@ -74,17 +94,17 @@ class State:
 
 		return s
 
-	def epistemic_nice(self, level: int = 0):
+	def epistemic_nice(self, level: int = 0) -> str:
 		"""Return a compact but still quite readable representation of the knowledge"""
 
-		def __wrap(state: 'State', l: int) -> str:
-			if len(state.knowledges) > 1:
-				return "(" + state.epistemic_nice(l + 1) + ")"
-			else:
+		def __wrap(state: "State", l: int) -> str:
+			if self.is_singleplayer:
 				return str(state.knowledges[0])
+			else:
+				return "(" + state.epistemic_nice(l + 1) + ")"
 
 		if level == 0:
-			if len(self.knowledges) > 1:
+			if not self.is_singleplayer:
 				return "\n".join([
 				    "{" + ", ".join([
 				        state.epistemic_nice(level + 1) for state in knowledge
@@ -99,7 +119,7 @@ class State:
 				else:
 					return str(self.knowledges[0])
 		else:
-			if len(self.knowledges) > 1:
+			if not self.is_singleplayer:
 				return "-".join([
 				    "".join([__wrap(state, level)
 				             for state in knowledge])
@@ -119,7 +139,7 @@ class State:
 		return ", ".join(
 		    [str(state.knowledges[0]) for state in self.consistent_base()])
 
-	def consistent_base(self) -> Set['State']:
+	def consistent_base(self) -> Set["State[Any]"]:
 		"""Return the states in the base game that are possible in this state
 
 		This assumes that the knowledges in the base game are singletons"""
@@ -127,10 +147,10 @@ class State:
 		def _pick(_set):
 			for x in _set:
 				return x
-			raise None
+			raise ValueError("Set was empty")
 
-		states = {self}
-		if len(self.knowledges) == 1 and type(self.knowledges[0]) is frozenset:
+		states: Any = {self}
+		if len(self.knowledges) == 1 and not self.is_base_state:
 			states = {self.knowledges[0]}
 
 		while len(_pick(states).knowledges) > 1:
@@ -145,14 +165,14 @@ class State:
 	#workaround to make sure the networkx isomorphism check works
 	orderable = False
 
-	def __gt__(self, other: 'State'):
-		if type(other) is not State:
+	def __gt__(self, other: "State[Any]"):
+		if not isinstance(other, State):
 			return NotImplemented
 		assert State.orderable
 		return id(self) > id(other)
 
-	def __lt__(self, other: 'State'):
-		if type(other) is not State:
+	def __lt__(self, other: "State[Any]"):
+		if not isinstance(other, State):
 			return NotImplemented
 		assert State.orderable
 		return id(self) < id(other)

@@ -11,7 +11,7 @@ def _permute(iterables):
     ex. _permute('ab', [1, 2]) -> ('a', 1), ('a', 2), ('b', 1), ('b', 2) in some order"""
 
 	iterables = tuple(
-	    iterable if hasattr(iterable, '__getitem__') else tuple(iterable)
+	    iterable if hasattr(iterable, "__getitem__") else tuple(iterable)
 	    for iterable in iterables)
 	indexes = [0] * len(iterables)
 	for iterable in iterables:
