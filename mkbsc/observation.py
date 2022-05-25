@@ -1,21 +1,23 @@
-from typing import Any, Dict, Iterator, Optional
+from typing import Any, Dict, Generic, Iterator, Optional, Tuple
 
 import networkx as nx  # type: ignore
 from networkx.drawing.nx_pydot import to_pydot  # type: ignore
 
 from mkbsc import state
 
+_States = Tuple[state.State[state.StateContent], ...]
 
-class Observation:
+
+class Observation(Generic[state.StateContent]):
 	"""Represents an observation of several states in a game"""
 	_idcounter = 0
 
-	def __init__(self, *states: state.State):
+	def __init__(self, *states: state.State[state.StateContent]):
 		"""Create a new observation
 
         ex. o = Observation(s0, s2, s3)
         """
-		self.states = tuple(states)
+		self.states: _States = tuple(states)
 		self.id = Observation._idcounter
 		Observation._idcounter += 1
 
@@ -23,10 +25,9 @@ class Observation:
 		"""Return the number of states in the observation"""
 		return len(self.states)
 
-	def __iter__(self) -> Iterator[state.State]:
+	def __iter__(self) -> Iterator[state.State[state.StateContent]]:
 		"""Iterate over the states"""
-		for state in self.states:
-			yield state
+		yield from self.states
 
 	def _subgraph(self,
 	              attributes: Optional[Dict[str, Any]] = None) -> nx.Graph:

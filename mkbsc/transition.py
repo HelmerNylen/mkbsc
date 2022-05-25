@@ -1,20 +1,21 @@
-from typing import Iterable, TypeVar
+from typing import Generic, Iterable, TypeVar
 
-from mkbsc.state import State
+from mkbsc.state import State, StateContent
 
-T = TypeVar("T")
+V = TypeVar("V")
 
 
-class Transition:
+class Transition(Generic[StateContent, V]):
 	"""Represents a transition between two states"""
 
-	def __init__(self, start: State, joint_action: Iterable[T], end: State):
+	def __init__(self, start: State[StateContent], joint_action: Iterable[V],
+	             end: State[StateContent]):
 		"""Create a new transition"""
-		self.start = start
+		self.start: State[StateContent] = start
 		self.joint_action = tuple(joint_action)
-		self.end = end
+		self.end: State[StateContent] = end
 
-	def __getitem__(self, index: int) -> T:
+	def __getitem__(self, index: int) -> V:
 		"""Get the action of a certain player"""
 		return self.joint_action[index]
 

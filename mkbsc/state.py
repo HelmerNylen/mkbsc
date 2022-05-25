@@ -1,9 +1,9 @@
 from typing import Any, FrozenSet, Generic, Set, Tuple, TypeVar
 
-T = TypeVar("T", Any, FrozenSet)
+StateContent = TypeVar("StateContent", Any, FrozenSet)
 
 
-class State(Generic[T]):
+class State(Generic[StateContent]):
 	"""Represents a game state, with separate knowledge for each player
 
 	The knowledge is stored as a tuple, and can be accessed by State().knowledges[playerindex]
@@ -15,15 +15,15 @@ class State(Generic[T]):
 	whose knowledge could be integers.
 	"""
 
-	def __init__(self, *knowledges: T):
+	def __init__(self, *knowledges: StateContent):
 		"""Create a new state
 
 		ex. s = State(1)
 		"""
 
-		self.knowledges: Tuple[T, ...] = tuple(knowledges)
+		self.knowledges: Tuple[StateContent, ...] = tuple(knowledges)
 
-	def __getitem__(self, index: int) -> T:
+	def __getitem__(self, index: int) -> StateContent:
 		"""Get the knowledge of the specified player
 
 		Will work as expected even if knowledges is a singleton"""

@@ -1,32 +1,34 @@
-from typing import Iterable, Iterator
+from typing import Generic, Iterable, Iterator, Tuple
 
 from mkbsc import observation
 from mkbsc import state
 
+_Observations = Tuple[observation.Observation[state.StateContent], ...]
 
-class Partitioning:
+
+class Partitioning(Generic[state.StateContent]):
 	"""Represents a partitioning of observations"""
 
-	def __init__(self, *observations: observation.Observation):
+	def __init__(self,
+	             *observations: observation.Observation[state.StateContent]):
 		"""Create a new partitioning
 
         ex. p = Partitioning(o1, o2, o3)
         """
-		self.observations = tuple(observations)
+		self.observations: _Observations = tuple(observations)
 
-	def __iter__(self) -> Iterator[observation.Observation]:
+	def __iter__(self) -> Iterator[observation.Observation[state.StateContent]]:
 		"""Iterate over the observations"""
-		for observation in self.observations:
-			yield observation
+		yield from self.observations
 
-	def valid(self, states: Iterable[state.State]) -> bool:
+	def valid(self, states: Iterable[state.State[state.StateContent]]) -> bool:
 		"""Test if the partitioning contains all states"""
-		s = set()
-		for observation in self.observations:
-			for state in observation:
-				if state in s:
+		collected = set()
+		for obs in self.observations:
+			for st in obs:
+				if st in collected:
 					return False
 				else:
-					s.add(state)
+					collected.add(st)
 
-		return frozenset(s) == frozenset(states)
+		return frozenset(collected) == frozenset(states)

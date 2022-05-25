@@ -131,7 +131,7 @@ def _serialize(game: MultiplayerGame) -> Iterable[str]:
 				newstates.update(state[player])
 
 			state_id -= 1
-		states = newstates
+		states = tuple(newstates)
 
 	id_add = abs(state_id) + len(states) - 1
 	yield "Base States:"
